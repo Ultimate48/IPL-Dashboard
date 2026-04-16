@@ -383,8 +383,12 @@ function PlayersTab({ players }) {
   const [roleFilter, setRoleFilter] = useState("all");
   const [search, setSearch] = useState("");
 
+  const isUnsoldStatus = status => status === "unsold" || status === "unsold_final";
+  const isSoldStatus = status => status === "sold";
+
   const filtered = players.filter(p => {
-    if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    if (statusFilter === "unsold" && !isUnsoldStatus(p.status)) return false;
+    if (statusFilter === "sold" && !isSoldStatus(p.status)) return false;
     if (roleFilter !== "all" && p.type !== roleFilter) return false;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
@@ -444,7 +448,7 @@ function PlayersTab({ players }) {
                   {r.label}
                 </span>
               </div>
-              {p.status === "sold" ? (
+                {isSoldStatus(p.status) ? (
                 <div className="pc-price">₹{p.soldPrice}Cr</div>
               ) : (
                 <div className="pc-base">Base: {p.basePrice}</div>
@@ -453,11 +457,11 @@ function PlayersTab({ players }) {
                 display: "inline-block", marginTop: 8,
                 fontSize: 10, fontWeight: 700, letterSpacing: 1,
                 padding: "2px 8px", borderRadius: 10,
-                background: p.status === "sold" ? "rgba(74,222,128,0.12)" : "rgba(100,116,139,0.15)",
-                color: p.status === "sold" ? "#4ade80" : "var(--dimmer)",
+                  background: isSoldStatus(p.status) ? "rgba(74,222,128,0.12)" : "rgba(100,116,139,0.15)",
+                  color: isSoldStatus(p.status) ? "#4ade80" : "var(--dimmer)",
                 fontFamily: "'Barlow Condensed', sans-serif",
               }}>
-                {p.status === "sold" ? "SOLD" : "AVAILABLE"}
+                  {isSoldStatus(p.status) ? "SOLD" : "AVAILABLE"}
               </div>
             </div>
           );
@@ -498,7 +502,7 @@ export default function Dashboard() {
   }));
 
   const totalSold = players.filter(p => p.status === "sold").length;
-  const totalUnsold = players.filter(p => p.status === "unsold").length;
+  const totalUnsold = players.filter(p => (p.status === "unsold" || p.status === "unsold_final")).length;
   const totalBudgetLeft = teamsWithPlayers.reduce((sum, t) => {
     const spent = t.players.reduce((s, p) => s + (p.soldPrice || 0), 0);
     return sum + (100 - spent);
