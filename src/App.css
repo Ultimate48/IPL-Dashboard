@@ -1,0 +1,223 @@
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060b14;
+    --surface: #0d1829;
+    --surface2: #111e33;
+    --border: rgba(255,255,255,0.07);
+    --border-bright: rgba(255,255,255,0.15);
+    --orange: #f97316;
+    --blue: #38bdf8;
+    --green: #4ade80;
+    --purple: #c084fc;
+    --gold: #fbbf24;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --dimmer: #334155;
+  }
+
+  body { background: var(--bg); }
+
+  .dash { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; }
+
+  /* Header */
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(6,11,20,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex; align-items: center; gap: 20px;
+    height: 64px;
+  }
+  .header-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 900; letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--orange), var(--gold));
+    background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+  }
+  .header-sub { font-size: 11px; color: var(--muted); letter-spacing: 3px; font-weight: 600; }
+  .header-stats { margin-left: auto; display: flex; gap: 20px; align-items: center; }
+  .hstat { text-align: center; }
+  .hstat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; }
+  .hstat-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); font-weight: 600; }
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; box-shadow:0 0 8px #ef4444; } 50% { opacity:.4; box-shadow:0 0 2px #ef4444; } }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 0; padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky; top: 64px; z-index: 90;
+  }
+  .tab {
+    padding: 14px 20px; border: none; background: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    color: var(--muted); border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+  /* Content */
+  .content { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+  /* Teams Grid */
+  .teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  /* Team Card */
+  .team-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .team-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--gold));
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .team-card:hover, .team-card.expanded {
+    border-color: rgba(249,115,22,0.3);
+    background: var(--surface2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(249,115,22,0.08);
+  }
+  .team-card:hover::before, .team-card.expanded::before { opacity: 1; }
+
+  .team-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800; letter-spacing: 1px;
+    color: #fff;
+  }
+  .team-meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+  .team-budget {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 900; line-height: 1;
+  }
+  .budget-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); font-weight: 600; }
+
+  /* Budget Bar */
+  .budget-bar-track {
+    height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px;
+    margin-top: 12px; overflow: hidden;
+  }
+  .budget-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+  /* Role pills */
+  .role-pills { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .role-pill {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 20px;
+  }
+
+  /* Players in team */
+  .team-players { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .player-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+    position: relative;
+    cursor: default;
+  }
+  .player-row:last-child { border-bottom: none; }
+  .player-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .player-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--green);
+  }
+
+  /* Hover tooltip */
+  .stat-tooltip {
+    display: none;
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #0a1628; border: 1px solid rgba(249,115,22,0.4);
+    border-radius: 12px; padding: 12px 14px; z-index: 200;
+    white-space: nowrap;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  .stat-tooltip::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: rgba(249,115,22,0.4);
+  }
+  .player-row:hover .stat-tooltip { display: block; }
+  .tooltip-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;
+  }
+  .tooltip-stats { display: flex; gap: 10px; }
+  .tooltip-stat { text-align: center; }
+  .tooltip-stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800;
+  }
+  .tooltip-stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; font-weight: 600; }
+
+  /* Players tab */
+  .players-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    color: var(--muted); transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--border-bright); color: var(--text); }
+  .filter-btn.active { background: var(--orange); border-color: var(--orange); color: #000; }
+
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+  .player-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+    position: relative; cursor: default;
+    transition: all 0.2s;
+  }
+  .player-card:hover {
+    border-color: var(--border-bright);
+    background: var(--surface2);
+  }
+  .player-card:hover .stat-tooltip { display: block; }
+  .player-card .stat-tooltip { bottom: calc(100% + 8px); }
+
+  .pc-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .pc-sold-to { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pc-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 2px 7px; border-radius: 10px; margin-left: auto;
+  }
+  .pc-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 800; color: var(--green);
+    margin-top: 6px;
+  }
+  .pc-base { font-size: 11px; color: var(--dimmer); margin-top: 6px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 2px; }
