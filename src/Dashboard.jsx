@@ -1,12 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ref, onValue } from "firebase/database";
 import { db } from "./firebase";
 import './App.css';
 
 const ROLE = {
-  Batter:    { color: "#38bdf8", bg: "rgba(56,189,248,0.12)",  label: "BAT" },
-  Bowler:     { color: "#4ade80", bg: "rgba(74,222,128,0.12)",  label: "BOWL" },
-  AllRounder: { color: "#fb923c", bg: "rgba(251,146,60,0.12)",  label: "AR" },
+  Batter:     { color: "#38bdf8", bg: "rgba(56,189,248,0.12)", label: "BAT" },
+  Bowler:     { color: "#4ade80", bg: "rgba(74,222,128,0.12)", label: "BOWL" },
+  AllRounder: { color: "#fb923c", bg: "rgba(251,146,60,0.12)", label: "AR" },
   WK:         { color: "#c084fc", bg: "rgba(192,132,252,0.12)", label: "WK" },
 };
 
@@ -15,9 +15,9 @@ const FLAG = { Indian: "🇮🇳", Foreigner: "🌏" };
 function StatTooltip({ player }) {
   const r = ROLE[player.type] || ROLE.Batter;
   const s = player.stats || {};
-  const isBat = player.type === "Batter" || player.type === "WK";
+  const isBat  = player.type === "Batter" || player.type === "WK";
   const isBowl = player.type === "Bowler";
-  const isAR = player.type === "AllRounder";
+  const isAR   = player.type === "AllRounder";
 
   return (
     <div className="stat-tooltip">
@@ -66,7 +66,22 @@ function StatTooltip({ player }) {
   );
 }
 
-
+function BudgetBar({ spent, total }) {
+  const pct = Math.min(100, Math.round((spent / total) * 100));
+  const color = pct > 80 ? "#ef4444" : pct > 55 ? "#fbbf24" : "#4ade80";
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11,
+        color: "var(--muted)", marginBottom: 6, fontWeight: 500 }}>
+        <span>SPENT <strong style={{ color: "#e2e8f0" }}>₹{spent}Cr</strong></span>
+        <span>LEFT <strong style={{ color }}> ₹{total - spent}Cr</strong></span>
+      </div>
+      <div className="budget-bar-track">
+        <div className="budget-bar-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
 
 function RolePills({ players }) {
   const counts = { Batter: 0, Bowler: 0, AllRounder: 0, WK: 0 };
@@ -85,15 +100,26 @@ function RolePills({ players }) {
 }
 
 function TeamCard({ team, players, allPlayerData, isExpanded, onToggle }) {
+  const totalBudget = 100;
+  const spent = players.reduce((s, p) => s + (p.soldPrice || 0), 0);
+  const foreign = players.filter(p => p.nationality === "Foreigner").length;
+  const pct = Math.min(100, Math.round((spent / totalBudget) * 100));
+  const budgetColor = pct > 80 ? "#ef4444" : pct > 55 ? "#fbbf24" : "#4ade80";
+
   return (
     <div className={`team-card ${isExpanded ? "expanded" : ""}`} onClick={onToggle}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div className="team-name">{team.name}</div>
-          <div className="team-meta">{players.length} players</div>
+          <div className="team-meta">{players.length} players · {foreign}/8 overseas</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div className="team-budget" style={{ color: budgetColor }}>₹{totalBudget - spent}</div>
+          <div className="budget-label">CR LEFT</div>
         </div>
       </div>
 
+      <BudgetBar spent={spent} total={totalBudget} />
       <RolePills players={players} />
 
       {isExpanded && (
@@ -117,6 +143,7 @@ function TeamCard({ team, players, allPlayerData, isExpanded, onToggle }) {
                     {r.label}
                   </span>
                 </div>
+                <span className="player-price">₹{p.soldPrice}Cr</span>
               </div>
             );
           })}
@@ -130,10 +157,14 @@ function PlayersTab({ players }) {
   const [roleFilter, setRoleFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  // Only show sold players
+  const isUnsoldStatus = status => status === "unsold" || status === "unsold_final";
+  const isSoldStatus = status => status === "sold";
+
   const filtered = players.filter(p => {
-    if (p.status !== "sold") return false;
+    if (statusFilter === "unsold" && !isUnsoldStatus(p.status)) return false;
+    if (statusFilter === "sold" && !isSoldStatus(p.status)) return false;
     if (roleFilter !== "all" && p.type !== roleFilter) return false;
+    if (natFilter  !== "all" && p.nationality !== natFilter) return false;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -141,6 +172,13 @@ function PlayersTab({ players }) {
   return (
     <div>
       <div className="players-controls">
+        {["all","unsold","sold"].map(s => (
+          <button key={s} className={`filter-btn ${statusFilter===s?"active":""}`}
+            onClick={() => setStatusFilter(s)}>
+            {s.toUpperCase()}
+          </button>
+        ))}
+        <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
         {["all","Batter","Bowler","AllRounder","WK"].map(r => (
           <button key={r} className={`filter-btn ${roleFilter===r?"active":""}`}
             onClick={() => setRoleFilter(r)}
@@ -148,6 +186,7 @@ function PlayersTab({ players }) {
             {r === "all" ? "ALL TYPES" : ROLE[r]?.label || r}
           </button>
         ))}
+
         <input
           placeholder="Search player..."
           value={search}
@@ -176,20 +215,28 @@ function PlayersTab({ players }) {
                   <div className="pc-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.name}
                   </div>
-                  <div className="pc-sold-to">{p.soldTeamName}</div>
+                  {p.status === "sold" && (
+                    <div className="pc-sold-to">{p.soldTeamName}</div>
+                  )}
                 </div>
                 <span className="pc-badge" style={{ color: r.color, background: r.bg }}>
                   {r.label}
                 </span>
               </div>
+                {isSoldStatus(p.status) ? (
+                <div className="pc-price">₹{p.soldPrice}Cr</div>
+              ) : (
+                <div className="pc-base">Base: {p.basePrice}</div>
+              )}
               <div style={{
                 display: "inline-block", marginTop: 8,
                 fontSize: 10, fontWeight: 700, letterSpacing: 1,
                 padding: "2px 8px", borderRadius: 10,
-                background: "rgba(74,222,128,0.12)", color: "#4ade80",
+                  background: isSoldStatus(p.status) ? "rgba(74,222,128,0.12)" : "rgba(100,116,139,0.15)",
+                  color: isSoldStatus(p.status) ? "#4ade80" : "var(--dimmer)",
                 fontFamily: "'Barlow Condensed', sans-serif",
               }}>
-                SOLD
+                  {isSoldStatus(p.status) ? "SOLD" : "AVAILABLE"}
               </div>
             </div>
           );
@@ -200,21 +247,14 @@ function PlayersTab({ players }) {
 }
 
 export default function Dashboard() {
-  const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
-  const [expandedTeam, setExpandedTeam] = useState(null);
-  const [activeTab, setActiveTab] = useState("teams");
 
   useEffect(() => {
-    const unsubTeams = onValue(ref(db, "teams"), snap => {
-      const data = snap.val() || {};
-      setTeams(Object.entries(data).map(([id, t]) => ({ id, ...t })));
-    });
-    const unsubPlayers = onValue(ref(db, "players"), snap => {
+    const unsub = onValue(ref(db, "players"), snap => {
       const data = snap.val() || {};
       setPlayers(Object.entries(data).map(([slug, p]) => ({ slug, ...p })));
     });
-    return () => { unsubTeams(); unsubPlayers(); };
+    return () => unsub();
   }, []);
 
   const teamsWithPlayers = teams.map(team => ({
@@ -231,60 +271,23 @@ export default function Dashboard() {
 
   const totalSold = players.filter(p => p.status === "sold").length;
   const totalUnsold = players.filter(p => (p.status === "unsold" || p.status === "unsold_final")).length;
+  const totalBudgetLeft = teamsWithPlayers.reduce((sum, t) => {
+    const spent = t.players.reduce((s, p) => s + (p.soldPrice || 0), 0);
+    return sum + (100 - spent);
+  }, 0);
 
   return (
-    <>
-      <div className="dash">
-        <header className="header">
-          <div>
-            <div className="header-logo">IPL AUCTION</div>
-          </div>
-          <div style={{ width: 1, height: 36, background: "var(--border)", margin: "0 8px" }} />
-          <div className="header-stats">
-            <div className="hstat">
-              <div className="hstat-val" style={{ color: "#4ade80" }}>{totalSold}</div>
-              <div className="hstat-label">SOLD</div>
-            </div>
-            <div className="hstat">
-              <div className="hstat-val" style={{ color: "var(--muted)" }}>{totalUnsold}</div>
-              <div className="hstat-label">UNSOLD</div>
-            </div>
-            <div className="hstat">
-              <div className="hstat-val" style={{ color: "#fbbf24" }}>{teams.length}</div>
-              <div className="hstat-label">TEAMS</div>
-            </div>
-          </div>
-          <div style={{ marginLeft: 12, display: "flex", alignItems: "center", gap: 6 }}>
-            <div className="live-dot" />
-            <span style={{ fontSize: 10, letterSpacing: 2, color: "#ef4444", fontWeight: 700 }}>LIVE</span>
-          </div>
-        </header>
-
-        <nav className="tabs">
-          {[["teams", "🏏 TEAMS"], ["players", "👤 PLAYERS"]].map(([id, label]) => (
-            <button key={id} className={`tab ${activeTab === id ? "active" : ""}`}
-              onClick={() => setActiveTab(id)}>{label}</button>
-          ))}
-        </nav>
-
-        <main className="content">
-          {activeTab === "teams" && (
-            <div className="teams-grid">
-              {teamsWithPlayers.map(team => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  players={team.players}
-                  allPlayerData={players}
-                  isExpanded={expandedTeam === team.id}
-                  onToggle={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
-                />
-              ))}
-            </div>
-          )}
-          {activeTab === "players" && <PlayersTab players={playerList} />}
-        </main>
-      </div>
-    </>
+    <div className="dash">
+      <header className="header">
+        <div className="header-logo">IPL AUCTION</div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="live-dot" />
+          <span style={{ fontSize: 10, letterSpacing: 2, color: "#ef4444", fontWeight: 700 }}>LIVE</span>
+        </div>
+      </header>
+      <main className="content" style={{ paddingTop: 20 }}>
+        <PlayersTab players={players} />
+      </main>
+    </div>
   );
 }
